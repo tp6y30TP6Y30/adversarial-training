@@ -44,16 +44,27 @@ def parse_args():
 def train(adversarial, dataset, model, device, optimizer, criterion, args, epoch, epochs):
     dataloader = DataLoader(dataset, batch_size = args.batchsize, shuffle = True, num_workers = 4, pin_memory = True)
     model.train()
+    total_loss_data = 0
     loss_data = 0
+    loss_adv_data = 0
     for img, label in tqdm(dataloader, ncols = 90, desc = '[Train: {}] {:d}/{:d}'.format('adversarial' if adversarial else 'nonAdversarial', epoch, epochs)):
         img, label = img.to(device), label.to(device)
         optimizer.zero_grad()
-        pred = model(img)
-        loss = criterion(pred, label)
-        loss.backward()
+        loss_adv = torch.zeros(1)
+        if adversarial:
+            loss, img_adv = projected_gradient_descent(model, img, label, criterion, y_target = label)
+            pred_adv = model(img_adv)
+            loss_adv = criterion(pred_adv, label)
+            loss_adv.backward()
+        else:
+            pred = model(img)
+            loss = criterion(pred, label)
+            loss.backward()
+        total_loss_data += loss.item() + loss_adv.item()
         loss_data += loss.item()
+        loss_adv_data += loss_adv.item()
         optimizer.step()
-    print('classify loss: ', loss_data / len(dataloader))
+    print('classify loss: {} nonAdCls loss: {} adCls loss: {}',format(total_loss_data / len(dataloader), loss_data / len(dataloader), loss_adv_data / len(dataloader)))
 
 def valid(adversarial, dataset, model, device, optimizer, criterion, args, epoch, epochs):
     dataloader = DataLoader(dataset, batch_size = args.batchsize, shuffle = False, num_workers = 4, pin_memory = True)
