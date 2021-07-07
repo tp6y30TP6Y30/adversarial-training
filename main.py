@@ -64,7 +64,7 @@ def train(adversarial, dataset, model, device, optimizer, criterion, args, epoch
         loss_data += loss.item()
         loss_adv_data += loss_adv.item()
         optimizer.step()
-    print('classify loss: {} nonAdCls loss: {} adCls loss: {}',format(total_loss_data / len(dataloader), loss_data / len(dataloader), loss_adv_data / len(dataloader)))
+    print('classify loss: {} nonAdCls loss: {} adCls loss: {}'.format(total_loss_data / len(dataloader), loss_data / len(dataloader), loss_adv_data / len(dataloader)))
 
 def valid(adversarial, dataset, model, device, optimizer, criterion, args, epoch, epochs):
     dataloader = DataLoader(dataset, batch_size = args.batchsize, shuffle = False, num_workers = 4, pin_memory = True)
